@@ -128,8 +128,8 @@ class CloningModel:
 
 
 def train_flow(X_train, y_train, X_val, y_val):
-    batch_size = 32
-    nb_epoch = 2
+    batch_size = 50
+    nb_epoch = 20
 
     train_datagen = ImageDataGenerator(
         rotation_range=15,
