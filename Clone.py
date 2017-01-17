@@ -96,14 +96,27 @@ class CloningModel:
 
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
-        mdl.add(Dropout(0.5))
+        mdl.add(Dropout(0.25))
         mdl.add(Activation('relu'))
+
         mdl.add(Convolution2D(128, 3, 3, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
+        mdl.add(Dropout(0.25))
         mdl.add(Activation('relu'))
+
+        mdl.add(Convolution2D(192, 3, 3, border_mode='valid', input_shape=input_shape))
+        mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
+        mdl.add(Dropout(0.25))
+        mdl.add(Activation('relu'))
+
         mdl.add(Flatten())
+
         mdl.add(Dense(256))
+        mdl.add(Dropout(0.25))
+
         mdl.add(Dense(128))
+        mdl.add(Dropout(0.25))
+
         mdl.add(Dense(1))
         # mdl.add(Activation('relu'))
         mdl.summary()
@@ -151,7 +164,7 @@ def train_flow(X_train, y_train, X_val, y_val):
     clone_model = cl.BehaviorModel(input_shape=input_shape)
     print(X_train.shape)
 
-    history = clone_model.fit_generator(train_generator, samples_per_epoch=2000,
+    history = clone_model.fit_generator(train_generator, samples_per_epoch=4000,
                                         nb_epoch=nb_epoch, validation_data=(X_val, y_val)
                                         )
     scr = clone_model.evaluate(X_val, y_val, batch_size=batch_size)
