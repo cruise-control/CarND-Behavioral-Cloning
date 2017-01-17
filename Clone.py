@@ -102,15 +102,22 @@ class RawDataHandler:
     def get_images(self, location="center"):
 
         image_locations = self.get_image_locations(location)
+        # set the offset for the images here
+        image_locations = "./simulator/" + image_locations
         images_from_car = list()
+        # Load an image and reduce in size before adding to array
+        # This is to reduce the required memory
         for img in image_locations:
-            images_from_car.append(imread(img).astype(np.float32))
+            image = imread(img).astype(np.float32)
+            image = imresize(image, 50).astype(np.float32)
+            images_from_car.append(image)
         # Scale and order between -0.5 and 0.5
         images_from_car = np.asarray(images_from_car)
         images_from_car /= 255
         images_from_car -= np.mean(images_from_car)
-        images_from_car = self.pre_process_images(images_from_car)
-        return np.asarray(images_from_car)
+        return images_from_car
+        # images_from_car = self.pre_process_images(images_from_car)
+        # return np.asarray(images_from_car)
 
     def pre_process_steering_angles(self, angles):
         """
@@ -146,31 +153,25 @@ class CloningModel:
     def BehaviorModel(input_shape):
         mdl = Sequential()
 
-        mdl.add(Convolution2D(64, 3, 3, border_mode='valid', input_shape=input_shape))
+        mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
+        # mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2), border_mode='valid', dim_ordering='default'))
+        mdl.add(Convolution2D(36, 5, 5, border_mode='valid'))
+        mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
+        mdl.add(Convolution2D(48, 5, 5, border_mode='valid'))
+        mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
+
+        mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
-        mdl.add(Dropout(0.25))
-        mdl.add(Activation('tanh'))
-
-        mdl.add(Convolution2D(128, 3, 3, border_mode='valid', input_shape=input_shape))
-        mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
-        mdl.add(Dropout(0.25))
-        mdl.add(Activation('tanh'))
-
-        mdl.add(Convolution2D(192, 3, 3, border_mode='valid', input_shape=input_shape))
-        mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
-        # mdl.add(Dropout(0.25))
-        mdl.add(Activation('tanh'))
+        mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
+        mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
 
         mdl.add(Flatten())
 
-        mdl.add(Dense(256))
-        # mdl.add(Dropout(0.25))
-
-        mdl.add(Dense(128))
-        # mdl.add(Dropout(0.25))
-
+        mdl.add(Dense(100))
+        mdl.add(Dense(50))
+        mdl.add(Dense(10))
         mdl.add(Dense(1))
-        # mdl.add(Activation('relu'))
+
         mdl.summary()
         mdl.compile(loss='mean_absolute_error', optimizer='rmsprop')
 
