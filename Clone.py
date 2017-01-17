@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.models import model_from_json
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import Convolution2D, MaxPooling2D
+from keras.layers import Convolution2D, MaxPooling2D, ELU
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam, RMSprop
@@ -58,6 +58,7 @@ class RawDataHandler:
     # csv_file = ""
     csv_headers = {"center": 0, 'left': 1, 'right': 2, 'steering_angle': 3}
     pickle_file = './train.p'
+    smooth_steering = False
 
     def __init__(self, csv_file):
         self.csv_file = csv_file
@@ -141,39 +142,58 @@ class RawDataHandler:
         return ret
 
     def get_steering_angles(self):
+        """
+
+        :return:
+        """
         angles = self.csv_data.icol(self.csv_headers['steering_angle'])
-        return self.pre_process_steering_angles(angles)
+
+        if self.smooth_steering:
+            return self.pre_process_steering_angles(angles)
+
+        return np.asarray(angles)
 
 
 class CloningModel:
     model_name = "model.json"
     weights_name = "model.h5"
 
+
     @staticmethod
     def BehaviorModel(input_shape):
+        """
+        Ref: https://github.com/commaai/research/blob/master/train_steering_model.py
+        :param input_shape:
+        :return:
+        """
         mdl = Sequential()
 
         mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
+        mdl.add(ELU())
         # mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2), border_mode='valid', dim_ordering='default'))
         mdl.add(Convolution2D(36, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
+        mdl.add(ELU())
         mdl.add(Convolution2D(48, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-
+        mdl.add(ELU())
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
+        mdl.add(ELU())
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
-
+        mdl.add(ELU())
         mdl.add(Flatten())
-
         mdl.add(Dense(100))
+        mdl.add(ELU())
         mdl.add(Dense(50))
+        mdl.add(ELU())
         mdl.add(Dense(10))
+        mdl.add(ELU())
         mdl.add(Dense(1))
 
         mdl.summary()
-        mdl.compile(loss='mean_absolute_error', optimizer='rmsprop')
+        mdl.compile(optimizer="adam", loss="mse")
 
         return mdl
 
@@ -193,12 +213,12 @@ class CloningModel:
         return model
 
 
-def train_flow(X_train, y_train, X_val, y_val):
+def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000):
     batch_size = 50
     nb_epoch = 20
 
     train_datagen = ImageDataGenerator(
-        rotation_range=15,
+        rotation_range=6,
         width_shift_range=0.2,
         height_shift_range=0.2,
         shear_range=0.2,
@@ -217,7 +237,7 @@ def train_flow(X_train, y_train, X_val, y_val):
     clone_model = cl.BehaviorModel(input_shape=input_shape)
     print(X_train.shape)
 
-    history = clone_model.fit_generator(train_generator, samples_per_epoch=4000,
+    history = clone_model.fit_generator(train_generator, samples_per_epoch=samples_per_epoch,
                                         nb_epoch=nb_epoch, validation_data=(X_val, y_val)
                                         )
     scr = clone_model.evaluate(X_val, y_val, batch_size=batch_size)
@@ -313,7 +333,7 @@ if __name__ == '__main__':
     # display_images(X_train,y_train)
 
     if params.train == 'True':
-        train_flow(X_train, y_train, X_val, y_val)
+        train_flow(X_train, y_train, X_val, y_val, samples_per_epoch=params.samples_per_epoch)
 
     if params.test == 'True':
         test_on_images(X_val, y_val)
