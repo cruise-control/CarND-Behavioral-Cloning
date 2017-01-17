@@ -1,6 +1,7 @@
 from idlelib.idle_test.test_io import S
 
-import os.path
+import os.path, getopt
+import sys
 import pandas as pd
 import pickle
 import numpy as np
@@ -17,6 +18,40 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.utils import np_utils
 import random
+import argparse
+
+
+class Parameters:
+
+    def __init__(self):
+        self.epochs = 10
+        self.batch_size = 32
+        self.train = True
+        self.test = False
+        self.regenerate = False
+        self.samples_per_epoch = 1000
+
+    def dump(self):
+        print("epochs ", self.epochs)
+        print("batch_size ", self.batch_size)
+        print("train ", self.train)
+        print("test ", self.test)
+        print("regenerate ", self.regenerate)
+        print("samples_per_epoch ", self.samples_per_epoch)
+
+    def parse_parameters(self):
+        parser = argparse.ArgumentParser(description='Pass arguemnts to the program')
+        parser.add_argument('-t', '--test', help='Run the final tests', required=False, default=False)
+        parser.add_argument('-T', '--train', help='Train the model', required=False, default=False)
+        parser.add_argument('-e', '--epochs', help='number of epochs to run for', required=False, default=20)
+        parser.add_argument('-r', '--regen', help='regenerate the test data', required=False, default=False)
+        parser.add_argument('-s', '--samples_per_epoch', help='samples to generate per epoch', required=False, default=1000)
+        args = parser.parse_args()
+        self.epochs = args.epochs
+        self.regenerate = args.regen
+        self.train = args.train
+        self.test = args.test
+        self.samples_per_epoch = args.samples_per_epoch
 
 
 class RawDataHandler:
@@ -28,32 +63,27 @@ class RawDataHandler:
         self.csv_file = csv_file
         self.csv_data = pd.read_csv(csv_file)
 
-    def get_pickle_data(self, location='center', regenerate='false'):
+    def get_pickle_data(self, location='center', regenerate='False'):
 
         self.pickle_raw_data(location=location, regenerate=regenerate)
 
         return pickle.load(open(self.pickle_file, "rb"))
 
-    def pickle_raw_data(self, location='center', regenerate='false'):
+    def pickle_raw_data(self, location='center', regenerate='False'):
 
-        generate_pickled_file = 'false'
+        generate_pickled_file = 'False'
 
         # Does the file exist? Yes? Are we forcing a regemeration? Np? Generate it
         if os.path.isfile(self.pickle_file):
-            if regenerate == 'true':
-                generate_pickled_file = 'true'
+            if regenerate == 'True':
+                generate_pickled_file = 'True'
         else:
-            generate_pickled_file = 'true'
+            generate_pickled_file = 'True'
 
-        if generate_pickled_file == 'true':
+        if generate_pickled_file == 'True':
             x = self.get_images(location)
             y = self.get_steering_angles()
-            y = y.tolist()
-            y = np.asarray(y)
-            # Scale result to be between 0 - 50
-            y += 25
-            # Convert to a float between 0 and 1
-            y /= 50
+
             pickle.dump((x, y), open(self.pickle_file, "wb"))
 
     def get_image_locations(self, location="center"):
@@ -82,8 +112,30 @@ class RawDataHandler:
         images_from_car = self.pre_process_images(images_from_car)
         return np.asarray(images_from_car)
 
+    def pre_process_steering_angles(self, angles):
+        """
+        Ref: http://stackoverflow.com/questions/14313510/how-to-calculate-moving-average-using-numpy
+        :param angles:
+        :return:
+        """
+        # # Scale result to be between 0 - 50
+        # angles += 1
+        # # Convert to a float between 0 and 1
+        # angles /= 50
+
+        N = 5
+        # Perform an averaging pass over the data
+        angles = np.asarray(angles.tolist())
+
+        window = np.ones(int(N)) / float(N)
+
+        ret = np.convolve(a=angles, v=window, mode='SAME')
+
+        return ret
+
     def get_steering_angles(self):
-        return self.csv_data.icol(self.csv_headers['steering_angle'])
+        angles = self.csv_data.icol(self.csv_headers['steering_angle'])
+        return self.pre_process_steering_angles(angles)
 
 
 class CloningModel:
@@ -192,6 +244,39 @@ def train(X_train, y_train, X_val, y_val):
     # cl.SaveMoodel(clone_model)
     print("Final Score (on validation data is: ", scr)
 
+def display_images(X_train, y_train):
+    # How many unique classes/labels there are in the dataset.
+    y_value = set()
+    for y in y_train:
+        y_value.add(y)
+    n_classes = len(y_value)
+    import random
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    for i in range(1):
+        # From LeNet lab
+        index = random.randint(0, len(X_train))
+        image = X_train[index].squeeze()
+        plt.figure(figsize=(5, 5))
+        plt.title('Class ' + str(y_train[index]))
+        plt.imshow(image)
+    y_data = [None] * n_classes
+
+    # Generate and plot a histogram of the dataset
+    for y in range(0, n_classes):
+        y_data[y] = 0
+
+    unique, unique_counts = np.unique(y_train,return_counts=True)
+    for index in range(0, len(unique)):
+        print( unique[index], " :: ", unique_counts[index])
+
+
+    idx = np.arange(n_classes)
+    plt.figure(figsize=(20, 20))
+    plt.title('Chart of classes in the dataset')
+    plt.bar(unique, unique_counts, linewidth=0.1)
+    plt.show()
 
 def test_on_images(X_val, y_val):
     cln = CloningModel()
@@ -206,49 +291,30 @@ def test_on_images(X_val, y_val):
         print("Result: ", result, " Expected: ", test_result)
 
 
+
+params = Parameters()
+
 if __name__ == '__main__':
 
-    train_flag = 1
+    params.parse_parameters()
+    params.dump()
 
     # Load the data ( place it into a pickle file if it is not already for future runs )
     raw_access = RawDataHandler("./simulator/driving_log.csv")
-    X_data, y_data = raw_access.get_pickle_data(location='center', regenerate='false')
 
+    X_data, y_data = raw_access.get_pickle_data(location='center', regenerate=params.regenerate)
+
+    print("Total train / val dataset contains ", len(X_data))
     # Split into train and validation sets
     X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
 
-    if train_flag:
+    # display_images(X_train,y_train)
+
+    if params.train == 'True':
         train_flow(X_train, y_train, X_val, y_val)
 
-    # batch_size = 32
-    # nb_epoch = 20
-    #
-    #
-    # # Load the data ( place it into a pickle file if it is not already for future runs )
-    # raw_access = RawDataHandler("./simulator/driving_log.csv")
-    # X_data, y_data = raw_access.get_pickle_data(location='center',regenerate='false')
-    #
-    # # Split into train and validation sets
-    # X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
-    #
-    # clone = CloningModel()
-    #
-    # if train_flag:
-    #     # Figure out the input shape of the images
-    #     input_shape = X_data[1].shape
-    #
-    #     # Get the model to train on
-    #     clone_model = clone.BehaviorModel(input_shape=input_shape)
-    #     print(X_train.shape)
-    #
-    #     history = clone_model.fit(X_train, y_train,
-    #                               batch_size=batch_size, nb_epoch=nb_epoch, verbose=1, validation_data=(X_val, y_val),
-    #                               shuffle='true')
-    #     score = clone_model.evaluate(X_val, y_val, batch_size=batch_size)
-    #     clone.SaveMoodel(clone_model)
-    #     print("Final Score (on validation data is: ", score)
-
-    test_on_images(X_val, y_val)
+    if params.test == 'True':
+        test_on_images(X_val, y_val)
 
     # Train the model
     print('Finished')
