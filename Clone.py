@@ -43,9 +43,9 @@ class Parameters:
         parser = argparse.ArgumentParser(description='Pass arguemnts to the program')
         parser.add_argument('-t', '--test', help='Run the final tests', required=False, default=False)
         parser.add_argument('-T', '--train', help='Train the model', required=False, default=False)
-        parser.add_argument('-e', '--epochs', help='number of epochs to run for', required=False, default=20)
+        parser.add_argument('-e', '--epochs', type=int, help='number of epochs to run for', required=False, default=20)
         parser.add_argument('-r', '--regen', help='regenerate the test data', required=False, default=False)
-        parser.add_argument('-s', '--samples_per_epoch', help='samples to generate per epoch', required=False, default=1000)
+        parser.add_argument('-s', '--samples_per_epoch', type=int, help='samples to generate per epoch', required=False, default=1000)
         args = parser.parse_args()
         self.epochs = args.epochs
         self.regenerate = args.regen
