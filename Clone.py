@@ -213,9 +213,8 @@ class CloningModel:
         return model
 
 
-def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000):
+def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000, nb_epoch=20):
     batch_size = 50
-    nb_epoch = 20
 
     train_datagen = ImageDataGenerator(
         rotation_range=6,
@@ -241,7 +240,9 @@ def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000):
                                         nb_epoch=nb_epoch, validation_data=(X_val, y_val)
                                         )
     scr = clone_model.evaluate(X_val, y_val, batch_size=batch_size)
-    # cl.SaveMoodel(clone_model)
+
+    cl.SaveMoodel(clone_model)
+
     print("Final Score (on validation data is: ", scr)
 
 
@@ -333,7 +334,7 @@ if __name__ == '__main__':
     # display_images(X_train,y_train)
 
     if params.train == 'True':
-        train_flow(X_train, y_train, X_val, y_val, samples_per_epoch=params.samples_per_epoch)
+        train_flow(X_train, y_train, X_val, y_val, nb_epoch=params.epochs, samples_per_epoch=params.samples_per_epoch)
 
     if params.test == 'True':
         test_on_images(X_val, y_val)
