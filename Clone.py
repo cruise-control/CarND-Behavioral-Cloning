@@ -149,17 +149,17 @@ class CloningModel:
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(Dropout(0.25))
-        mdl.add(Activation('relu'))
+        mdl.add(Activation('tanh'))
 
         mdl.add(Convolution2D(128, 3, 3, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(Dropout(0.25))
-        mdl.add(Activation('relu'))
+        mdl.add(Activation('tanh'))
 
         mdl.add(Convolution2D(192, 3, 3, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(4, 4), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(Dropout(0.25))
-        mdl.add(Activation('relu'))
+        mdl.add(Activation('tanh'))
 
         mdl.add(Flatten())
 
@@ -244,6 +244,7 @@ def train(X_train, y_train, X_val, y_val):
     # cl.SaveMoodel(clone_model)
     print("Final Score (on validation data is: ", scr)
 
+
 def display_images(X_train, y_train):
     # How many unique classes/labels there are in the dataset.
     y_value = set()
@@ -278,6 +279,7 @@ def display_images(X_train, y_train):
     plt.bar(unique, unique_counts, linewidth=0.1)
     plt.show()
 
+
 def test_on_images(X_val, y_val):
     cln = CloningModel()
     mdl = cln.LoadModel()
@@ -289,7 +291,6 @@ def test_on_images(X_val, y_val):
         transformed_image_array = test_image[None, :, :, :]
         result = float(mdl.predict(transformed_image_array, batch_size=1))
         print("Result: ", result, " Expected: ", test_result)
-
 
 
 params = Parameters()
