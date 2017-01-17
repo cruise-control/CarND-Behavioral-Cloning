@@ -160,8 +160,8 @@ def train_flow(X_train, y_train, X_val, y_val):
 
 
 def train(X_train, y_train, X_val, y_val):
-    batch_size = 32
-    nb_epoch = 2
+    batch_size = 50
+    nb_epoch = 20
 
     cl = CloningModel()
 
@@ -180,7 +180,9 @@ def train(X_train, y_train, X_val, y_val):
     print("Final Score (on validation data is: ", scr)
 
 
-def test_on_images(mdl, X_val, y_val):
+def test_on_images(X_val, y_val):
+    cln = CloningModel()
+    mdl = cln.LoadModel()
     print(len(y_val))
     print(X_val.shape)
     for index in range(0, len(y_val)):
@@ -233,7 +235,7 @@ if __name__ == '__main__':
     #     clone.SaveMoodel(clone_model)
     #     print("Final Score (on validation data is: ", score)
 
-    test_on_images(CloningModel.LoadModel(), X_val, y_val)
+    test_on_images(X_val, y_val)
 
     # Train the model
     print('Finished')
