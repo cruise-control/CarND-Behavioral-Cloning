@@ -115,8 +115,8 @@ class RawDataHandler:
     def get_images(self, location="center"):
 
         image_locations = self.get_image_locations(location)
-        # set the offset for the images here
-        image_locations = "./simulator/" + image_locations
+        # set the offset for the images here (and strip it of whitespace)
+        image_locations = "./simulator/" + image_locations.strip()
         images_from_car = list()
         # Load an image and reduce in size before adding to array
         # This is to reduce the required memory
