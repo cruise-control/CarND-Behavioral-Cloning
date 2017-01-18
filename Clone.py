@@ -19,6 +19,7 @@ from keras.optimizers import SGD, Adam, RMSprop
 from keras.utils import np_utils
 import random
 import argparse
+import gc
 
 
 class Parameters:
@@ -84,20 +85,22 @@ class RawDataHandler:
 
         if generate_pickled_file == 'True':
             x = self.get_images(location)
-            xl = self.get_images('left')
-            xr = self.get_images('right')
             y = self.get_steering_angles()
-            yl = self.get_steering_angles()
-            yr = self.get_steering_angles()
-
-            # Should this be applied to only left or right turns from the side camera
-            # or to both turns?
-            yl *= self.side_steering_modifier
-            yr *= self.side_steering_modifier
-            x = np.concatenate([x,xl,xr])
-            y = np.concatenate([y,yl,yr])
-
             pickle.dump((x, y), open(self.pickle_file, "wb"))
+            gc.collect()
+
+            xl = self.get_images('left')
+            yl = self.get_steering_angles()
+            yl *= self.side_steering_modifier
+            pickle.dump((xl, yl), open(self.pickle_file, "wb"))
+            gc.collect()
+
+            xr = self.get_images('right')
+            yr = self.get_steering_angles()
+            yr *= self.side_steering_modifier
+            pickle.dump((xr, yr), open(self.pickle_file, "wb"))
+            gc.collect()
+
 
     def get_image_locations(self, location="center"):
 
