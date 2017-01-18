@@ -102,8 +102,9 @@ class RawDataHandler:
     def get_image_locations(self, location="center"):
 
         index = self.csv_headers[location]
-        # print(self.csv_data.info())
         image_paths = self.csv_data.icol(index)
+        image_paths = [x.strip() for x in image_paths]
+
         return image_paths
 
     def pre_process_images(self, images):
@@ -115,8 +116,8 @@ class RawDataHandler:
     def get_images(self, location="center"):
 
         image_locations = self.get_image_locations(location)
-        # set the offset for the images here (and strip it of whitespace)
-        image_locations = "./simulator/" + image_locations.strip()
+        # set the offset for the images here
+        image_locations = ["./simulator/" + i for i in image_locations]
         images_from_car = list()
         # Load an image and reduce in size before adding to array
         # This is to reduce the required memory
