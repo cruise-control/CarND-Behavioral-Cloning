@@ -59,6 +59,7 @@ class RawDataHandler:
     csv_headers = {"center": 0, 'left': 1, 'right': 2, 'steering_angle': 3}
     pickle_file = './train.p'
     smooth_steering = False
+    side_steering_modifier = 1.1
 
     def __init__(self, csv_file):
         self.csv_file = csv_file
@@ -83,7 +84,18 @@ class RawDataHandler:
 
         if generate_pickled_file == 'True':
             x = self.get_images(location)
+            xl = self.get_images('left')
+            xr = self.get_images('right')
             y = self.get_steering_angles()
+            yl = self.get_steering_angles()
+            yr = self.get_steering_angles()
+
+            # Should this be applied to only left or right turns from the side camera
+            # or to both turns?
+            yl *= self.side_steering_modifier
+            yr *= self.side_steering_modifier
+            x = np.concatenate([x,xl,xr])
+            y = np.concatenate([y,yl,yr])
 
             pickle.dump((x, y), open(self.pickle_file, "wb"))
 
@@ -170,7 +182,7 @@ class CloningModel:
 
         mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
         mdl.add(ELU())
-        # mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2), border_mode='valid', dim_ordering='default'))
+        mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(1,1), border_mode='valid', dim_ordering='default'))
         mdl.add(Convolution2D(36, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
         mdl.add(ELU())
@@ -217,13 +229,12 @@ def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000, nb_epoch=2
     batch_size = 50
 
     train_datagen = ImageDataGenerator(
-        rotation_range=6,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
+        rotation_range=3,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
         fill_mode='nearest',
-        horizontal_flip=False)
+        horizontal_flip=False,
+        vertical_flip=False)
 
     train_generator = train_datagen.flow(X_train, y_train, batch_size=batch_size)
 
