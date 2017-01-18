@@ -84,7 +84,7 @@ class RawDataHandler:
             generate_pickled_file = 'True'
 
         if generate_pickled_file == 'True':
-            x = self.get_images(location)
+            x = self.get_images('center')
             y = self.get_steering_angles()
             pickle.dump((x, y), open(self.pickle_file, "wb"))
             gc.collect()
@@ -92,13 +92,13 @@ class RawDataHandler:
             xl = self.get_images('left')
             yl = self.get_steering_angles()
             yl *= self.side_steering_modifier
-            pickle.dump((xl, yl), open(self.pickle_file, "wb"))
+            pickle.dump((xl, yl), open(self.pickle_file, "ab"))
             gc.collect()
 
             xr = self.get_images('right')
             yr = self.get_steering_angles()
             yr *= self.side_steering_modifier
-            pickle.dump((xr, yr), open(self.pickle_file, "wb"))
+            pickle.dump((xr, yr), open(self.pickle_file, "ab"))
             gc.collect()
 
 
