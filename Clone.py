@@ -74,7 +74,10 @@ class RawDataHandler:
     def get_test_size(self):
         return len(self.csv_data)
 
-    def get_data_set(self, nb_samples=1000):
+    def get_data_set(self, location="random", nb_samples=1000):
+        
+        assert(nb_samples < self.get_test_size())
+        
         # Choose a sample of random indices
         random_sample_locations = random.sample(range(1,self.get_test_size()),nb_samples)
 
@@ -82,14 +85,21 @@ class RawDataHandler:
         image_locations = list()
         y_values = list()
         for index in random_sample_locations:
+            # Get the center image initially
+            lcr_image = 0
+            
             # Left, Center, Right Image, randomly choose
-            lcr_image = random.randint(0,2)
+            if location == 'random':
+                lcr_image = random.randint(0,2)
+            else:
+                lcr_image = self.csv_headers['center']
+                
             image_locations.append(self.csv_data.iget_value(index, lcr_image))
             steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
             if lcr_image == 1:
-                steer_angle += 0.27
+                steer_angle += 0.21
             if lcr_image == 2:
-                steer_angle -= 0.27
+                steer_angle -= 0.21
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
@@ -224,7 +234,7 @@ class CloningModel:
         """
         mdl = Sequential()
 
-        mdl.add(Convolution2D(24, 5, 5, border_mode='same', input_shape=input_shape))
+        mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
         mdl.add(ELU())
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2), border_mode='valid', dim_ordering='default'))
         mdl.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid'))
@@ -233,10 +243,11 @@ class CloningModel:
         mdl.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid'))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
         mdl.add(ELU())
-        mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
+        mdl.add(Convolution2D(64, 3, 3, subsample=(2, 2), border_mode='valid'))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(ELU())
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
+        mdl.add(Dropout(.2))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(ELU())
         mdl.add(Flatten())
