@@ -275,7 +275,7 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
         width_shift_range=0.0,
         height_shift_range=0.0,
         shear_range=0.0,
-        zoom_range=0.0
+        zoom_range=0.0,
         fill_mode='nearest',
         horizontal_flip=False,
         vertical_flip=False)
