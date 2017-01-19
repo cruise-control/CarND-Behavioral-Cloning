@@ -103,7 +103,14 @@ class RawDataHandler:
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
-        image_locations = ["./simulator/" + i for i in image_locations]
+        l = list()
+        for path in image_locations:
+            if "simulator/" in path:
+                left, right = path.split("simulator/",1)
+                l.append(right)
+            else:
+                l.append(path)
+        image_locations = ["./simulator/" + i for i in l]
         images_from_car = list()
         # Load an image and reduce in size before adding to array
         # This is to reduce the required memory
