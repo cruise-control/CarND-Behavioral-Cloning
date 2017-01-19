@@ -97,9 +97,9 @@ class RawDataHandler:
             image_locations.append(self.csv_data.iget_value(index, lcr_image))
             steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
             if lcr_image == 1:
-                steer_angle += 0.21
+                steer_angle += 0.15
             if lcr_image == 2:
-                steer_angle -= 0.21
+                steer_angle -= 0.15
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
@@ -313,7 +313,7 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
 
         # Load a fresh set of center images and 1/10th of random data from the total dataset here
         X_data, y_data = image_access.get_data_set(location='center',nb_samples=samples_to_load)
-        X_data_r, y_data_r = image_access.get_data_set(location='random',nb_samples=int(samples_to_load/10))
+        X_data_r, y_data_r = image_access.get_data_set(location='random',nb_samples=int(samples_to_load/20))
         X_data = np.concatenate([X_data,X_data_r])
         y_data = np.concatenate([y_data,y_data_r])
         
