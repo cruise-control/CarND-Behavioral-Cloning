@@ -235,9 +235,11 @@ class CloningModel:
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
         mdl.add(ELU())
         mdl.add(Flatten())
+        model.add(Dropout(.2))
         mdl.add(Dense(100))
         mdl.add(ELU())
         mdl.add(Dense(50))
+        model.add(Dropout(.2))
         mdl.add(ELU())
         mdl.add(Dense(10))
         mdl.add(ELU())
@@ -270,6 +272,10 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
 
     train_datagen = ImageDataGenerator(
         rotation_range=3,
+        width_shift_range=0.0,
+        height_shift_range=0.0,
+        shear_range=0.0,
+        zoom_range=0.0
         fill_mode='nearest',
         horizontal_flip=False,
         vertical_flip=False)
