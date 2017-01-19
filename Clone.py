@@ -258,8 +258,8 @@ class CloningModel:
         mdl.add(Dropout(.3))
         mdl.add(ELU())
         mdl.add(Dense(10))
-        mdl.add(ELU())
         mdl.add(Dense(1))
+        mdl.add(Activation('tanh')) # Push the output between an allowed range
 
         mdl.summary()
         mdl.compile(optimizer="adam", loss="mse")
