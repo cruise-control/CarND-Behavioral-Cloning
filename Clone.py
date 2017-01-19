@@ -305,7 +305,7 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
         print('Epoch', e)
 
         # Load a fresh set of (random) data from the total dataset here
-        X_data, y_data = image_access.get_data_set(nb_samples=samples_to_load)
+        X_data, y_data = image_access.get_data_set(location='center',nb_samples=samples_to_load)
 
         # Split into train and validation sets
         X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
