@@ -420,7 +420,7 @@ if __name__ == '__main__':
 
     if params.train == 'True':
         x, y = raw_access.get_data_set(2)
-        train_flow_manual(x[0].shape, samples_to_load=1000, nb_epoch=params.epochs,
+        train_flow_manual(x[0].shape, samples_to_load=5000, nb_epoch=params.epochs,
                           samples_per_epoch=params.samples_per_epoch, batch_size=params.batch_size)
 
     if params.test == 'True':
