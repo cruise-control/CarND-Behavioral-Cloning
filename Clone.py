@@ -304,9 +304,12 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
     for e in range(nb_epoch):
         print('Epoch', e)
 
-        # Load a fresh set of (random) data from the total dataset here
+        # Load a fresh set of center images and 1/10th of random data from the total dataset here
         X_data, y_data = image_access.get_data_set(location='center',nb_samples=samples_to_load)
-
+        X_data_r, y_data_r = image_access.get_data_set(location='random',nb_samples=int(samples_to_load/10))
+        X_data = np.concatenate([X_data,X_data_r])
+        y_data = np.concatenate([y_data,y_data_r])
+        
         # Split into train and validation sets
         X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
 
