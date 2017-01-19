@@ -31,6 +31,7 @@ class Parameters:
         self.test = False
         self.regenerate = False
         self.samples_per_epoch = 1000
+        self.raw_samples = 5000
 
     def dump(self):
         print("epochs ", self.epochs)
@@ -47,8 +48,12 @@ class Parameters:
         parser.add_argument('-e', '--epochs', type=int, help='number of epochs to run for', required=False, default=10)
         parser.add_argument('-r', '--regen', help='regenerate the test data', required=False, default=False)
         parser.add_argument('-s', '--samples_per_epoch', type=int, help='samples to generate per epoch', required=False, default=1000)
+        parser.add_argument('-b', '--batch_size', type=int, help='size of batches to run every epoch', required=False, default=50)
+        parser.add_argument('-R', '--raw_samples', type=int, help='number of raw samples to load', required=False, default=5000)
         args = parser.parse_args()
         self.epochs = args.epochs
+        self.batch_size = args.batch_size
+        self.raw_samples = args.raw_samples
         self.regenerate = args.regen
         self.train = args.train
         self.test = args.test
