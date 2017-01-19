@@ -44,7 +44,7 @@ class Parameters:
         parser = argparse.ArgumentParser(description='Pass arguemnts to the program')
         parser.add_argument('-t', '--test', help='Run the final tests', required=False, default=False)
         parser.add_argument('-T', '--train', help='Train the model', required=False, default=False)
-        parser.add_argument('-e', '--epochs', type=int, help='number of epochs to run for', required=False, default=20)
+        parser.add_argument('-e', '--epochs', type=int, help='number of epochs to run for', required=False, default=10)
         parser.add_argument('-r', '--regen', help='regenerate the test data', required=False, default=False)
         parser.add_argument('-s', '--samples_per_epoch', type=int, help='samples to generate per epoch', required=False, default=1000)
         args = parser.parse_args()
@@ -57,7 +57,7 @@ class Parameters:
 
 class RawDataHandler:
     # csv_file = ""
-    csv_headers = {"center": 0, 'left': 1, 'right': 2, 'steering_angle': 3}
+    csv_headers = {"center": 0, 'left': 1, 'right': 2, 'steering_angle': 3, 'random':4}
     pickle_file = './train.p'
     smooth_steering = False
     side_steering_modifier = 1.1
@@ -65,6 +65,42 @@ class RawDataHandler:
     def __init__(self, csv_file):
         self.csv_file = csv_file
         self.csv_data = pd.read_csv(csv_file)
+
+    def get_test_size(self):
+        return len(self.csv_data)
+
+    def get_data_set(self, nb_samples=1000):
+        # Choose a sample of random indices
+        random_sample_locations = random.sample(range(1,self.get_test_size()),nb_samples)
+
+        # Load either the left, right or center image and corresponding steering angle at this point
+        image_locations = list()
+        y_values = list()
+        for index in random_sample_locations:
+            # Left, Center, Right Image, randomly choose
+            lcr_image = random.randint(0,2)
+            image_locations.append(self.csv_data.iget_value(index, lcr_image))
+            steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
+            if lcr_image == 1:
+                steer_angle += 0.27
+            if lcr_image == 2:
+                steer_angle -= 0.27
+            y_values.append(steer_angle)
+        # Strip any white space in the image locations
+        image_locations = [x.strip() for x in image_locations]
+        image_locations = ["./simulator/" + i for i in image_locations]
+        images_from_car = list()
+        # Load an image and reduce in size before adding to array
+        # This is to reduce the required memory
+        for img in image_locations:
+            image = imread(img).astype(np.float32)
+            image = imresize(image, 50).astype(np.float32)
+            images_from_car.append(image)
+        # Scale and order between -0.5 and 0.5
+        images_from_car = np.asarray(images_from_car)
+        images_from_car /= 255
+        images_from_car -= np.mean(images_from_car)
+        return images_from_car, np.asarray(y_values)
 
     def get_pickle_data(self, location='center', regenerate='False'):
 
@@ -100,7 +136,6 @@ class RawDataHandler:
             yr *= self.side_steering_modifier
             pickle.dump((xr, yr), open(self.pickle_file, "ab"))
             gc.collect()
-
 
     def get_image_locations(self, location="center"):
 
@@ -229,6 +264,41 @@ class CloningModel:
         return model
 
 
+def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000, nb_epoch=20, batch_size=50):
+
+    image_access = RawDataHandler("./simulator/driving_log.csv")
+
+    train_datagen = ImageDataGenerator(
+        rotation_range=3,
+        fill_mode='nearest',
+        horizontal_flip=False,
+        vertical_flip=False)
+
+    cl = CloningModel()
+
+    # Get the model to train on
+    clone_model = cl.BehaviorModel(input_shape=input_shape)
+
+    for e in range(nb_epoch):
+        print('Epoch', e)
+
+        # Load a fresh set of (random) data from the total dataset here
+        X_data, y_data = image_access.get_data_set(nb_samples=samples_to_load)
+
+        # Split into train and validation sets
+        X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
+
+        train_generator = train_datagen.flow(X_train, y_train, batch_size=batch_size)
+
+        history = clone_model.fit_generator(train_generator, samples_per_epoch=samples_per_epoch,
+                                            nb_epoch=1, validation_data=(X_val, y_val)
+                                            )
+
+    scr = clone_model.evaluate(X_val, y_val, batch_size=batch_size)
+    print("Final Score (on validation data is: ", scr)
+    cl.SaveMoodel(clone_model)
+
+
 def train_flow(X_train, y_train, X_val, y_val,samples_per_epoch=5000, nb_epoch=20):
     batch_size = 50
 
@@ -340,18 +410,21 @@ if __name__ == '__main__':
     # Load the data ( place it into a pickle file if it is not already for future runs )
     raw_access = RawDataHandler("./simulator/driving_log.csv")
 
-    X_data, y_data = raw_access.get_pickle_data(location='center', regenerate=params.regenerate)
-
-    print("Total train / val dataset contains ", len(X_data))
-    # Split into train and validation sets
-    X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
-
+    # X_data, y_data = raw_access.get_pickle_data(location='center', regenerate=params.regenerate)
+    #
+    # print("Total train / val dataset contains ", len(X_data))
+    # # Split into train and validation sets
+    # X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.33, random_state=50)
+    #
     # display_images(X_train,y_train)
 
     if params.train == 'True':
-        train_flow(X_train, y_train, X_val, y_val, nb_epoch=params.epochs, samples_per_epoch=params.samples_per_epoch)
+        x, y = raw_access.get_data_set(2)
+        train_flow_manual(x[0].shape, samples_to_load=1000, nb_epoch=params.epochs,
+                          samples_per_epoch=params.samples_per_epoch, batch_size=params.batch_size)
 
     if params.test == 'True':
+        X_val, y_val = raw_access.get_data_set(200)
         test_on_images(X_val, y_val)
 
     # Train the model
