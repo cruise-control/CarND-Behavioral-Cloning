@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.models import model_from_json
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import Convolution2D, MaxPooling2D, ELU
+from keras.layers import Convolution2D, MaxPooling2D, ELU, Lambda
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam, RMSprop
@@ -97,9 +97,9 @@ class RawDataHandler:
             image_locations.append(self.csv_data.iget_value(index, lcr_image))
             steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
             if lcr_image == 1:
-                steer_angle += 0.25
+                steer_angle += 0.3
             if lcr_image == 2:
-                steer_angle -= 0.25
+                steer_angle -= 0.3
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
@@ -279,6 +279,31 @@ class CloningModel:
         mdl.compile(optimizer="adam", loss="mse")
 
         return mdl
+
+
+    def BehaviorModelV2(self,input_shape):
+        ch, row, col = input_shape  # camera format
+
+        model = Sequential()
+        model.add(Lambda(lambda x: x / 127.5 - 1.,
+                         input_shape=(ch, row, col),
+                         output_shape=(ch, row, col)))
+        model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same"))
+        model.add(ELU())
+        model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
+        model.add(ELU())
+        model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
+        model.add(Flatten())
+        model.add(Dropout(.2))
+        model.add(ELU())
+        model.add(Dense(512))
+        model.add(Dropout(.5))
+        model.add(ELU())
+        model.add(Dense(1))
+
+        model.compile(optimizer="adam", loss="mse")
+
+        return model
 
     def SaveMoodel(self, mdl):
         json_string = mdl.to_json()
