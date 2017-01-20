@@ -97,9 +97,9 @@ class RawDataHandler:
             image_locations.append(self.csv_data.iget_value(index, lcr_image))
             steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
             if lcr_image == 1:
-                steer_angle += 0.2
+                steer_angle += 0.25
             if lcr_image == 2:
-                steer_angle -= 0.2
+                steer_angle -= 0.25
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
