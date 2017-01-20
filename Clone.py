@@ -88,18 +88,18 @@ class RawDataHandler:
             # Get the center image initially
             lcr_image = 0
             
-            # Left, Center, Right Image, randomly choose
+            # Left, Right Image, randomly choose
             if location == 'random':
-                lcr_image = random.randint(0,2)
+                lcr_image = random.randint(1,2)
             else:
                 lcr_image = self.csv_headers['center']
                 
             image_locations.append(self.csv_data.iget_value(index, lcr_image))
             steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
             if lcr_image == 1:
-                steer_angle += 0.15
+                steer_angle += 0.2
             if lcr_image == 2:
-                steer_angle -= 0.15
+                steer_angle -= 0.2
             y_values.append(steer_angle)
         # Strip any white space in the image locations
         image_locations = [x.strip() for x in image_locations]
@@ -115,7 +115,7 @@ class RawDataHandler:
         # Load an image and reduce in size before adding to array
         # This is to reduce the required memory
         for img in image_locations:
-            image = imread(img).astype(np.float32)
+            image = imread(img, mode='RGB').astype(np.float32)
             image = imresize(image, 50).astype(np.float32)
             images_from_car.append(image)
         # Scale and order between -0.5 and 0.5
@@ -242,28 +242,35 @@ class CloningModel:
         mdl = Sequential()
 
         mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2), border_mode='valid', dim_ordering='default'))
         mdl.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid'))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid'))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Convolution2D(64, 3, 3, subsample=(2, 2), border_mode='valid'))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
         mdl.add(Dropout(.2))
         #mdl.add(MaxPooling2D(pool_size=(2, 2), strides=None, border_mode='valid', dim_ordering='default'))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Flatten())
-        mdl.add(Dropout(.3))
+        mdl.add(Dropout(.5))
         mdl.add(Dense(100))
-        mdl.add(ELU())
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Dense(50))
-        mdl.add(Dropout(.3))
-        mdl.add(ELU())
+        mdl.add(Dropout(.5))
+        #mdl.add(ELU())
+        mdl.add(Activation('tanh'))
         mdl.add(Dense(10))
         mdl.add(Dense(1))
         mdl.add(Activation('tanh')) # Push the output between an allowed range
@@ -295,8 +302,8 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
 
     train_datagen = ImageDataGenerator(
         rotation_range=3,
-        width_shift_range=0.0,
-        height_shift_range=0.0,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
         shear_range=0.0,
         zoom_range=0.0,
         fill_mode='nearest',
@@ -313,7 +320,7 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
 
         # Load a fresh set of center images and 1/10th of random data from the total dataset here
         X_data, y_data = image_access.get_data_set(location='center',nb_samples=samples_to_load)
-        X_data_r, y_data_r = image_access.get_data_set(location='random',nb_samples=int(samples_to_load/20))
+        X_data_r, y_data_r = image_access.get_data_set(location='random',nb_samples=int(samples_to_load/40))
         X_data = np.concatenate([X_data,X_data_r])
         y_data = np.concatenate([y_data,y_data_r])
         
