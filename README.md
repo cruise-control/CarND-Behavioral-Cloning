@@ -66,5 +66,24 @@ The image is shrunk to 1/2 of its original size. The primary purpose for this is
 A mixture of ELU and TanH activation functions were used. With only ELU the output angle was going beyond the allowed range during simulation. This resulted in wider swings of the vehicle couple with overcorrecting which eventualy led to it driving off of the road. Using TanH for the fully connected layers gave an output in the expected range of -1 to +1. This scheme was chosen after successive rounds of experimentation to determine the mixture of activation functions and dropout levels in the fully connected layer.
 
 # Training Approach
-Feed in some images, see how long to converge. Test the result. Make a hypothesis as to why it did not work, modify either the model, the generator parameters, the number of images to train with or the raw data itself. Train the model again, see what happens. Change 1 parameter, observe, rinse, repeat unil the final model is created. The process probably took close to 70 or 80 iterations until a working model was found.
+1. Get a random set of data from the Udacity Data Set
+  - Split into test and validation sets
+  - Train the model with this data see how long it takes to converge.
+2. Test the result
+3. Make a hypothesis as to why it did not work / what failed
+4. Modify one of the following:
+  - The model
+  - The generator parameters
+  - The number of images to train with
+  - the raw data itself
+5. Go back to 1 until a working solution is available
+
+The process probably took close to 70 or 80 iterations until a working model was found.
+## Some problems encountered during training
+### Car oscillates between the road edges
+Too much data from the Left and Right Cameras without a high enough bias on the steering angles for those images. I think the Left and Right images flooded the network enough so that the trained model could only ever steer between the sides of the road and not keep the center line. **Solution** reduced the Left and Right images and increased the bias on the steering angle. Also increased dropout
+### Car immediately drives off the road
+This happened when using bad data, too much data from the Left and Right Cameras and a (probably) overfitted network. **Solution** Reduced the bad data, reduced the Left and Right camera images and added more dropout. Also started training with many more images.
+### Car gets confused on some corners
+This was due to the approach angle. With some corners the car would approach too wide or too tight and eventually would drive off the road and follow the outside edge of the road on the grass until it crashed. **Solution** Increase the bias on the Left and Right Steering Angle and ensure that there was enough data from the Left and Right Cameras to keep the car in the center of the road but not too much so that it began oscillating.
 
