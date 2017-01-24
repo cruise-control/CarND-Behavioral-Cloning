@@ -78,6 +78,9 @@ A mixture of ELU and TanH activation functions were used. With only ELU the outp
   - the raw data itself
 5. Go back to 1 until a working solution is available
 
+## Train, Validation, Test Split
+In my first submission, the Udacity data was specificially only used for **Training** and **Validation**. The reason for this was because the actual 'Test' is the running in the simulator and a Human's determination if this model is suitable. A subset of Test data could be kept back and used for Testing of the actual trained model, however, I have observed that a low error value can have little to do with how well the car behaves in the simulator. After thinking on this, a small sample of images is used to ascertain a reference value for how the model performed. This sample set is the first 1000 images in the total data set. It is not a random sample but it is only passingly used to ascertain the health of the model.
+
 The process probably took close to 70 or 80 iterations until a working model was found.
 ## Some problems encountered during training
 ### Car oscillates between the road edges

@@ -10,6 +10,8 @@ from keras.layers import Convolution2D, MaxPooling2D, ELU, Dense, Dropout, Activ
 from keras.preprocessing.image import ImageDataGenerator
 from scipy.misc import imread, imresize
 from sklearn.model_selection import train_test_split
+# import BatchNormalization
+from keras.layers.normalization import BatchNormalization
 
 
 class Parameters:
@@ -63,20 +65,57 @@ class RawDataHandler:
     pickle_file = './train.p'
     smooth_steering = False
     side_steering_modifier = 1.1
+    test_sample_size = 300
 
     def __init__(self, csv_file):
         self.csv_file = csv_file
         self.csv_data = pd.read_csv(csv_file)
 
-    def get_test_size(self):
-        return len(self.csv_data)
+    def get_test_set(self):
+
+        # Choose a sample of random indices
+        test_locations = range(1, self.test_sample_size)
+
+        # Load either the left, right or center image and corresponding steering angle at this point
+        image_locations = list()
+        y_values = list()
+        for index in test_locations:
+            lcr_image = self.csv_headers['center']
+            image_locations.append(self.csv_data.iget_value(index, lcr_image))
+            steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
+            y_values.append(steer_angle)
+        # Strip any white space in the image locations
+        image_locations = [x.strip() for x in image_locations]
+        l = list()
+        for path in image_locations:
+            if "simulator/" in path:
+                left, right = path.split("simulator/", 1)
+                l.append(right)
+            else:
+                l.append(path)
+        image_locations = ["./simulator/" + i for i in l]
+        images_from_car = list()
+        # Load an image and reduce in size before adding to array
+        # This is to reduce the required memory
+        for img in image_locations:
+            image = imread(img, mode='RGB').astype(np.float32)
+            image = imresize(image, 50).astype(np.float32)
+            images_from_car.append(image)
+        # Scale and order between -0.5 and 0.5
+        images_from_car = np.asarray(images_from_car)
+        images_from_car /= 255
+        images_from_car -= np.mean(images_from_car)
+        return images_from_car, np.asarray(y_values)
+
+    def get_train_size(self):
+        return len(self.csv_data) - self.test_sample_size
 
     def get_data_set(self, location="random", nb_samples=1000):
 
-        assert (nb_samples < self.get_test_size())
+        assert (nb_samples < self.get_train_size())
 
         # Choose a sample of random indices
-        random_sample_locations = random.sample(range(1, self.get_test_size()), nb_samples)
+        random_sample_locations = random.sample(range(self.test_sample_size, self.get_train_size()), nb_samples)
 
         # Load either the left, right or center image and corresponding steering angle at this point
         image_locations = list()
@@ -158,6 +197,7 @@ class CloningModel:
         mdl.add(Activation('tanh'))
         mdl.add(Dense(10))
         mdl.add(Dense(1))
+        mdl.add(BatchNormalization())
         # Push the output between an allowed range
         mdl.add(Activation('tanh'))
 
@@ -218,7 +258,8 @@ def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000,
                                   nb_epoch=1, validation_data=(x_val, y_val)
                                   )
 
-    x_test, y_test = image_access.get_data_set(location='center', nb_samples=200)
+    x_test, y_test = image_access.get_test_set()
+    # get_data_set(location='center', nb_samples=200)
     scr = clone_model.evaluate(x_test, y_test, batch_size=batch_size)
     print("Final Score (on random test data) is: ", scr)
     cl.save_model(clone_model)
