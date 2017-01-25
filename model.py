@@ -72,50 +72,16 @@ class RawDataHandler:
         self.csv_data = pd.read_csv(csv_file)
 
     def get_test_set(self):
-
-        # Choose a sample of random indices
-        test_locations = range(1, self.test_sample_size)
-
-        # Load either the left, right or center image and corresponding steering angle at this point
-        image_locations = list()
-        y_values = list()
-        for index in test_locations:
-            lcr_image = self.csv_headers['center']
-            image_locations.append(self.csv_data.iget_value(index, lcr_image))
-            steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
-            y_values.append(steer_angle)
-        # Strip any white space in the image locations
-        image_locations = [x.strip() for x in image_locations]
-        l = list()
-        for path in image_locations:
-            if "simulator/" in path:
-                left, right = path.split("simulator/", 1)
-                l.append(right)
-            else:
-                l.append(path)
-        image_locations = ["./simulator/" + i for i in l]
-        images_from_car = list()
-        # Load an image and reduce in size before adding to array
-        # This is to reduce the required memory
-        for img in image_locations:
-            image = imread(img, mode='RGB').astype(np.float32)
-            image = imresize(image, 50).astype(np.float32)
-            images_from_car.append(image)
-        # Scale and order between -0.5 and 0.5
-        images_from_car = np.asarray(images_from_car)
-        images_from_car /= 255
-        images_from_car -= np.mean(images_from_car)
-        return images_from_car, np.asarray(y_values)
+        return self.get_image_set(1, self.test_sample_size, location='random')
 
     def get_train_size(self):
         return len(self.csv_data) - self.test_sample_size
 
-    def get_data_set(self, location="random", nb_samples=1000):
-
+    def get_image_set(self,start_location, end_location, location='random', nb_samples=1000):
         assert (nb_samples < self.get_train_size())
 
         # Choose a sample of random indices
-        random_sample_locations = random.sample(range(self.test_sample_size, self.get_train_size()), nb_samples)
+        random_sample_locations = random.sample(range(start_location, end_location), nb_samples)
 
         # Load either the left, right or center image and corresponding steering angle at this point
         image_locations = list()
@@ -159,6 +125,57 @@ class RawDataHandler:
         images_from_car -= np.mean(images_from_car)
         return images_from_car, np.asarray(y_values)
 
+    def get_data_set(self, location="random", nb_samples=1000):
+
+        assert (nb_samples < self.get_train_size())
+
+        return self.get_image_set(self.test_sample_size, self.get_train_size(), location=location)
+
+        # # Choose a sample of random indices
+        # random_sample_locations = random.sample(range(self.test_sample_size, self.get_train_size()), nb_samples)
+        #
+        # # Load either the left, right or center image and corresponding steering angle at this point
+        # image_locations = list()
+        # y_values = list()
+        # for index in random_sample_locations:
+        #     lcr_image = 0
+        #
+        #     if location == 'random':
+        #         # Left, Right Image, randomly choose
+        #         lcr_image = random.randint(1, 2)
+        #     else:
+        #         lcr_image = self.csv_headers['center']
+        #
+        #     image_locations.append(self.csv_data.iget_value(index, lcr_image))
+        #     steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
+        #     if lcr_image == self.csv_headers['left']:
+        #         steer_angle += 0.3
+        #     if lcr_image == self.csv_headers['right']:
+        #         steer_angle -= 0.3
+        #     y_values.append(steer_angle)
+        # # Strip any white space in the image locations
+        # image_locations = [x.strip() for x in image_locations]
+        # l = list()
+        # for path in image_locations:
+        #     if "simulator/" in path:
+        #         left, right = path.split("simulator/", 1)
+        #         l.append(right)
+        #     else:
+        #         l.append(path)
+        # image_locations = ["./simulator/" + i for i in l]
+        # images_from_car = list()
+        # # Load an image and reduce in size before adding to array
+        # # This is to reduce the required memory
+        # for img in image_locations:
+        #     image = imread(img, mode='RGB').astype(np.float32)
+        #     image = imresize(image, 50).astype(np.float32)
+        #     images_from_car.append(image)
+        # # Scale and order between -0.5 and 0.5
+        # images_from_car = np.asarray(images_from_car)
+        # images_from_car /= 255
+        # images_from_car -= np.mean(images_from_car)
+        # return images_from_car, np.asarray(y_values)
+
 
 class CloningModel:
     model_name = "model.json"
@@ -177,42 +194,34 @@ class CloningModel:
 
         mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(36, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(48, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
-        # mdl.add(BatchNormalization(mode=0, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Flatten())
         mdl.add(Dropout(.5))
         
         mdl.add(Dense(100))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(Activation('tanh'))
         
-        mdl.add(Dense(50))
-        # mdl.add(BatchNormalization(mode=2, axis=1))        
+        mdl.add(Dense(50))       
         mdl.add(Activation('tanh'))
         mdl.add(Dropout(.5))
         
         mdl.add(Dense(10))
         mdl.add(Dense(1))
-        # mdl.add(BatchNormalization(mode=2, axis=1))
 
         # Push the output between an allowed range
         mdl.add(Activation('tanh'))
