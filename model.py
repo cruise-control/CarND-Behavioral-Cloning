@@ -65,14 +65,15 @@ class RawDataHandler:
     pickle_file = './train.p'
     smooth_steering = False
     side_steering_modifier = 1.1
-    test_sample_size = 300
+    test_sample_size = 1000
 
     def __init__(self, csv_file):
         self.csv_file = csv_file
         self.csv_data = pd.read_csv(csv_file)
 
     def get_test_set(self):
-        return self.get_image_set(1, self.test_sample_size, location='random')
+        return self.get_image_set(start_location=1, end_location=self.test_sample_size, location='random',
+                                  nb_samples=self.test_sample_size)
 
     def get_train_size(self):
         return len(self.csv_data) - self.test_sample_size
