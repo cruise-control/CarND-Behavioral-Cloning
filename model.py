@@ -189,7 +189,7 @@ class CloningModel:
         mdl.add(ELU())
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
         mdl.add(BatchNormalization())
-        dl.add(ELU())
+        mdl.add(ELU())
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
         mdl.add(BatchNormalization())
         mdl.add(ELU())
