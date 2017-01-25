@@ -196,12 +196,16 @@ class CloningModel:
         mdl.add(Flatten())
         mdl.add(Dropout(.5))
         mdl.add(Dense(100))
+        mdl.add(BatchNormalization())
         mdl.add(Activation('tanh'))
         mdl.add(Dense(50))
+        mdl.add(BatchNormalization())
         mdl.add(Dropout(.5))
         mdl.add(Activation('tanh'))
         mdl.add(Dense(10))
+        mdl.add(BatchNormalization())
         mdl.add(Dense(1))
+        mdl.add(BatchNormalization())
 
         # Push the output between an allowed range
         mdl.add(Activation('tanh'))
