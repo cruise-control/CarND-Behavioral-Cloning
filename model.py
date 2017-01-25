@@ -187,6 +187,7 @@ class CloningModel:
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
         mdl.add(ELU())
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
+        mdl.add(BatchNormalization())
         mdl.add(ELU())
         mdl.add(Flatten())
         mdl.add(Dropout(.5))
@@ -197,7 +198,7 @@ class CloningModel:
         mdl.add(Activation('tanh'))
         mdl.add(Dense(10))
         mdl.add(Dense(1))
-        mdl.add(BatchNormalization())
+
         # Push the output between an allowed range
         mdl.add(Activation('tanh'))
 
