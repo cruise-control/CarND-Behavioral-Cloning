@@ -80,7 +80,6 @@ class RawDataHandler:
 
     def get_image_set(self,start_location, end_location, location='random', nb_samples=1000):
         assert (nb_samples < self.get_train_size())
-        assert ((end_location - start_location) <= nb_samples)
 
         # Choose a sample of random indices
         random_sample_locations = random.sample(range(start_location, end_location), nb_samples)
