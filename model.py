@@ -177,17 +177,17 @@ class CloningModel:
 
         mdl.add(Convolution2D(24, 5, 5, border_mode='valid', input_shape=input_shape))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(36, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(48, 5, 5, border_mode='valid'))
         mdl.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), border_mode='valid', dim_ordering='default'))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Convolution2D(64, 3, 3, border_mode='valid'))
@@ -195,24 +195,24 @@ class CloningModel:
         mdl.add(ELU())
         
         mdl.add(Convolution2D(96, 3, 3, border_mode='valid'))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(ELU())
         
         mdl.add(Flatten())
         mdl.add(Dropout(.5))
         
         mdl.add(Dense(100))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
         mdl.add(Activation('tanh'))
         
         mdl.add(Dense(50))
-        mdl.add(BatchNormalization(mode=0, axis=1))        
+        mdl.add(BatchNormalization(mode=2, axis=1))        
         mdl.add(Activation('tanh'))
         mdl.add(Dropout(.5))
         
         mdl.add(Dense(10))
         mdl.add(Dense(1))
-        mdl.add(BatchNormalization(mode=0, axis=1))
+        mdl.add(BatchNormalization(mode=2, axis=1))
 
         # Push the output between an allowed range
         mdl.add(Activation('tanh'))
