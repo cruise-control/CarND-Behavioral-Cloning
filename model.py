@@ -224,10 +224,10 @@ class CloningModel:
 
 
 def train_flow_manual(input_shape, samples_to_load=1000, samples_per_epoch=5000, nb_epoch=20, batch_size=50):
-	"""
-	Datagenerator implementation referenced from 
-	https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
-	"""
+    """
+    Datagenerator implementation referenced from 
+    https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
+    """
     image_access = RawDataHandler("./simulator/driving_log.csv")
 
     train_datagen = ImageDataGenerator(
