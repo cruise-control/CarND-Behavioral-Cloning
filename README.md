@@ -1,5 +1,5 @@
 # Overview
-This submission uses a custom designed and trained continuous output CNN model which is heavily based on the reference paper provided "End to End Learning fro Self-Driving Cars". Successive rounds of training, testing, deduction and refining were done to come up with a working solution. 
+This submission uses a custom designed and trained continuous output CNN model which is heavily based on the reference paper provided "End to End Learning fro Self-Driving Cars" with some reference to the solution by comma.ai located at https://github.com/commaai/research. Successive rounds of training, testing, deduction and refining were done to come up with a working solution. 
 
 ## Challenges
 * Getting useful data
@@ -65,6 +65,8 @@ The image is shrunk to 1/2 of its original size. The primary purpose for this is
 
 A mixture of ELU and TanH activation functions were used. With only ELU the output angle was going beyond the allowed range during simulation. This resulted in wider swings of the vehicle couple with overcorrecting which eventualy led to it driving off of the road. Using TanH for the fully connected layers gave an output in the expected range of -1 to +1. This scheme was chosen after successive rounds of experimentation to determine the mixture of activation functions and dropout levels in the fully connected layer.
 
+The optimizer used was the Adam optimizer with the mean squared error as the error metric. The default learning rate was used.
+
 # Training Approach
 1. Get a random set of data from the Udacity Data Set
   - Split into test and validation sets
@@ -89,4 +91,6 @@ Too much data from the Left and Right Cameras without a high enough bias on the 
 This happened when using bad data, too much data from the Left and Right Cameras and a (probably) overfitted network. **Solution** Reduced the bad data, reduced the Left and Right camera images and added more dropout. Also started training with many more images.
 ### Car gets confused on some corners
 This was due to the approach angle. With some corners the car would approach too wide or too tight and eventually would drive off the road and follow the outside edge of the road on the grass until it crashed. **Solution** Increase the bias on the Left and Right Steering Angle and ensure that there was enough data from the Left and Right Cameras to keep the car in the center of the road but not too much so that it began oscillating.
+### Car not responding very well
+Sometimes the car would appear to be 'laggy' in its operation. I tried several things and ultimately decided to reduce the throttle from 0.2 to 0.1 in drive.py. This resulted in a much smoother simulation and was a major step toward the working solution. I believe that my development machine was not able to respond quick enough for the simulator to operate correctly.
 
