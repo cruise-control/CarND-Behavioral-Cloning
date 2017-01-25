@@ -21,6 +21,18 @@ finally removing my data, retraining and it worked!
 ## Training & Validation Data
 Udacity provided training data was utilized. The center images and a *portion* of the Left and Right camera images were used for training. This portion is *1/40th* of the number of center image samples used per Epoch. When using more than this portion, the simulation become unstable or unreliable due to a 'kneejerk' reaction at the edges of the road. The Udacity training set by itself was insufficient and more data was required. Ultimately I ran out of memory on both my development machine and on the AWS so I implemented a Keras ImageGenerater to augment the training data. Per Epoch I loaded 15000 images from the original data set. This was divided into a 1/3 for validation and the remainder for training. Of the 10000 raw images for training, this was augmented to 20000 images from the generator.
 
+Examples of the center, left and right images from the same point on the track. Note the perspective distorion in the images
+
+
+Center Image                      ![Alt](./center.jpg "Sample Image")
+
+
+Left Image (+0.3 steering angle)  ![Alt](./left.jpg "Left Image")
+
+
+Right Image (-0.3 steering angle) ![Alt](./right.jpg "Right Image")
+
+
 ## Generator
 The following generator parameters were utilized:
 ```python
@@ -67,6 +79,8 @@ A mixture of ELU and TanH activation functions were used. With only ELU the outp
 
 The optimizer used was the Adam optimizer with the mean squared error as the error metric. The default learning rate was used.
 
+There is no batch normalization in this model. It trains faster, converges quicker and gives better results without Batch Normalization. This is probably due to my particular implementation of it and a lack of deeper experimentation / time to experiment to get it implemented.
+
 # Training Approach
 1. Get a random set of data from the Udacity Data Set
   - Split into test and validation sets
@@ -80,8 +94,11 @@ The optimizer used was the Adam optimizer with the mean squared error as the err
   - the raw data itself
 5. Go back to 1 until a working solution is available
 
+
+ScreenShot ![Alt](./ActiveSim.png "ScreenShot Image")
+
 ## Train, Validation, Test Split
-In my first submission, the Udacity data was specificially only used for **Training** and **Validation**. The reason for this was because the actual 'Test' is the running in the simulator and a Human's determination if this model is suitable. A subset of Test data could be kept back and used for Testing of the actual trained model, however, I have observed that a low error value can have little to do with how well the car behaves in the simulator. After thinking on this, a small sample of images is used to ascertain a reference value for how the model performed. This sample set is the first 1000 images in the total data set. It is not a random sample but it is only passingly used to ascertain the health of the model.
+In my first submission, the Udacity data was specificially only used for **Training** and **Validation**. The reason for this was because the actual 'Test' is the running in the simulator and a Human's determination if this model is suitable. A subset of Test data could be kept back and used for Testing of the actual trained model, however, I have observed that a low error value can have little to do with how well the car behaves in the simulator. After thinking on this, a small sample of images is used to ascertain a reference value for how the model performed. This sample set is the first 1000 images in the total data set. It is not a random sample but it is only passingly used to ascertain the health of the model, the true test is actually seeing if it works.
 
 The process probably took close to 70 or 80 iterations until a working model was found.
 ## Some problems encountered during training
