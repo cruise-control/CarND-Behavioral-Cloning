@@ -72,7 +72,7 @@ class RawDataHandler:
         self.csv_data = pd.read_csv(csv_file)
 
     def get_test_set(self):
-        return self.get_image_set(start_location=1, end_location=self.test_sample_size, location='random',
+        return self.get_image_set(start_location=1, end_location=self.test_sample_size+1, location='random',
                                   nb_samples=self.test_sample_size)
 
     def get_train_size(self):
@@ -80,6 +80,7 @@ class RawDataHandler:
 
     def get_image_set(self,start_location, end_location, location='random', nb_samples=1000):
         assert (nb_samples < self.get_train_size())
+        assert ((end_location - start_location) <= nb_samples)
 
         # Choose a sample of random indices
         random_sample_locations = random.sample(range(start_location, end_location), nb_samples)
@@ -130,7 +131,7 @@ class RawDataHandler:
 
         assert (nb_samples < self.get_train_size())
 
-        return self.get_image_set(self.test_sample_size, self.get_train_size(), location=location)
+        return self.get_image_set(self.test_sample_size, self.get_train_size(), location=location, nb_samples=nb_samples)
 
         # # Choose a sample of random indices
         # random_sample_locations = random.sample(range(self.test_sample_size, self.get_train_size()), nb_samples)
