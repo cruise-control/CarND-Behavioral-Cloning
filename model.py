@@ -132,51 +132,6 @@ class RawDataHandler:
 
         return self.get_image_set(self.test_sample_size, self.get_train_size(), location=location, nb_samples=nb_samples)
 
-        # # Choose a sample of random indices
-        # random_sample_locations = random.sample(range(self.test_sample_size, self.get_train_size()), nb_samples)
-        #
-        # # Load either the left, right or center image and corresponding steering angle at this point
-        # image_locations = list()
-        # y_values = list()
-        # for index in random_sample_locations:
-        #     lcr_image = 0
-        #
-        #     if location == 'random':
-        #         # Left, Right Image, randomly choose
-        #         lcr_image = random.randint(1, 2)
-        #     else:
-        #         lcr_image = self.csv_headers['center']
-        #
-        #     image_locations.append(self.csv_data.iget_value(index, lcr_image))
-        #     steer_angle = self.csv_data.iget_value(index, self.csv_headers['steering_angle'])
-        #     if lcr_image == self.csv_headers['left']:
-        #         steer_angle += 0.3
-        #     if lcr_image == self.csv_headers['right']:
-        #         steer_angle -= 0.3
-        #     y_values.append(steer_angle)
-        # # Strip any white space in the image locations
-        # image_locations = [x.strip() for x in image_locations]
-        # l = list()
-        # for path in image_locations:
-        #     if "simulator/" in path:
-        #         left, right = path.split("simulator/", 1)
-        #         l.append(right)
-        #     else:
-        #         l.append(path)
-        # image_locations = ["./simulator/" + i for i in l]
-        # images_from_car = list()
-        # # Load an image and reduce in size before adding to array
-        # # This is to reduce the required memory
-        # for img in image_locations:
-        #     image = imread(img, mode='RGB').astype(np.float32)
-        #     image = imresize(image, 50).astype(np.float32)
-        #     images_from_car.append(image)
-        # # Scale and order between -0.5 and 0.5
-        # images_from_car = np.asarray(images_from_car)
-        # images_from_car /= 255
-        # images_from_car -= np.mean(images_from_car)
-        # return images_from_car, np.asarray(y_values)
-
 
 class CloningModel:
     model_name = "model.json"
